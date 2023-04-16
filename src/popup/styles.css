@@ -1,0 +1,126 @@
+.app {
+   width: 400px;
+   min-height: 150px;
+   max-height: 100vh;
+
+   font-family: 'Open Sans', sans-serif;;
+   background-color: white;
+
+   margin: auto;
+}
+
+@media only screen and (max-height: 600px) {
+   .app {
+      max-height: 600px;
+   }
+}
+
+.ls-05 {
+   letter-spacing: 0.5px;
+}
+
+.ls-1 {
+   letter-spacing: 1px;
+}
+
+.line-clamp {
+   display: -webkit-box;
+   -webkit-line-clamp: 2;
+   -webkit-box-orient: vertical;
+   overflow: hidden;
+}
+
+.color-unset {
+   color: unset;
+}
+
+.w-30 {
+   width: 30%;
+}
+
+.listing {
+   min-height: 120px;
+   max-height: 120px;
+}
+
+.listing img {
+   width: 100%;
+   height: 100%;
+   object-fit: contain;
+}
+
+.listing:last-child {
+   margin-bottom: 0 !important;
+}
+
+.clickable {
+   cursor: pointer;
+   color: var(--bs-gray-600);
+}
+
+.clickable:hover {
+   color: var(--bs-gray-900);
+}
+
+a.clickable:hover {
+   text-decoration: underline !important;
+   text-underline-offset: 4px;
+}
+
+.clickable:active {
+   color: var(--bs-gray-600);
+}
+
+.img-div {
+   flex: 0 0 auto;
+   width: 25%
+}
+
+.img-div>div {
+   display: none;
+}
+
+.img-div:hover>div {
+   display: unset;
+}
+
+.listing .remove-btn {
+   display: none;
+}
+
+.listing:hover .remove-btn {
+   display: unset;
+}
+
+.z-index-1 {
+   z-index: 1;
+}
+
+.z-index-2 {
+   z-index: 2;
+}
+
+.text-gray-800 {
+   color: var(--bs-gray-800);
+}
+
+.text-gray-700 {
+   color: var(--bs-gray-700);
+}
+
+.text-gray-600 {
+   color: var(--bs-gray-600);
+}
+
+.overflow-y-scroll {
+   overflow-y: scroll;
+}
+
+.hide-scrollbar {
+   -ms-overflow-style: none;
+   scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+   display: none;
+}

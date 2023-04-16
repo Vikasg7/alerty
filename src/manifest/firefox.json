@@ -1,0 +1,40 @@
+{
+   "name": "Alerty",
+   "description": "An extension to alert users on price drops in and availability of Amazon/Flipkart Products",
+   "version": "1.0.4",
+   "manifest_version": 3,
+   "icons": {
+      "128": "assets/cart-arrow-down-solid.png"
+   },
+   "background": {
+      "page": "background/index.html"
+   },
+   "action": {
+      "default_title": "Alerty",
+      "default_popup": "popup/index.html"
+   },
+   "host_permissions": [
+      "https://www.amazon.in/dp/*",
+      "https://m.media-amazon.com/images/*",
+      "https://*.flipkart.com/*/p/itm*",
+      "https://rukminim1.flixcart.com/image/*"
+   ],
+   "permissions": [
+      "notifications",
+      "storage",
+      "activeTab",
+      "alarms"
+   ],
+   "content_security_policy": {
+      "extension_pages": "script-src 'self'; object-src 'self'"
+   },
+   "browser_specific_settings": {
+      "gecko": {
+         "id": "{8a8d43a6-ac26-4e0a-b167-cf9c318628ec}",
+         "strict_min_version": "109.0"
+      },
+      "safari": {
+         "strict_min_version": "15.4"
+      }
+   }
+}
