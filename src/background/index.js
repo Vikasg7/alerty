@@ -1,4 +1,4 @@
-import "../lib/cheerio-1.0.0.js"
+import "../lib/cheerio-1.0.0.min.js"
 
 globalThis.chrome = globalThis.browser ? globalThis.browser : globalThis.chrome
 
