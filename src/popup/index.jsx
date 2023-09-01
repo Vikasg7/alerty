@@ -2,7 +2,7 @@
 
 import * as Preact from '../lib/preact.module.js'
 import { Fragment } from '../lib/preact.module.js'
-import { useEffect, useState } from '../lib/preact-hooks.module.js'
+import { useEffect, useRef, useState } from '../lib/preact-hooks.module.js'
 import { signal, computed, batch } from '../lib/preact-signals.module.js'
 
 globalThis.chrome = globalThis.browser ? globalThis.browser : globalThis.chrome
@@ -92,7 +92,7 @@ const handleAdd = (event) => {
    setLoading(true)
 }
 
-const handleDel = (listing) => (event) => {
+const handleDel = (listing) => {
    event.preventDefault()
    sendMsg({ action: "DelListing", key: listing.key })
 }
@@ -148,6 +148,10 @@ const onAppMount = () => {
    return () => chrome.runtime.onMessage.removeListener(handleMsg)
 }
 
+const onSearchBarMount = (inputRef) => () => {
+   inputRef.current?.focus()
+}
+
 // Dumb components
 const Spinner = () => (
    <div className="z-index-2 position-absolute top-0 bottom-0 start-0 end-0
@@ -157,7 +161,7 @@ const Spinner = () => (
    </div>
 )
 
-const Alert = ({ msg, onClick }) => (
+const Alert = ({ msg, onClose }) => (
    <div className="z-index-2 position-absolute top-0 bottom-0 start-0 end-0
                    d-flex justify-content-center align-items-center
                    bg-white bg-opacity-75">
@@ -166,13 +170,13 @@ const Alert = ({ msg, onClick }) => (
                       ps-2 pe-4 py-1 bg-white">
          <span className="small">{msg}</span>
          <div className="position-absolute end-0 top-0 pe-1 small">
-            <i className="fa-solid fa-xmark clickable" onClick={onClick}></i>
+            <i className="fa-solid fa-xmark clickable" onClick={onClose}></i>
          </div>
       </div>
    </div>
 )
 
-const DelConfirmation = ({ listing, showConfirm }) => (
+const DelConfirmation = ({ onOk, onClose }) => (
    <div className="z-index-1 position-absolute top-0 bottom-0 start-0 end-0
                    d-flex justify-content-center align-items-center
                    bg-white bg-opacity-75 rounded">
@@ -181,8 +185,8 @@ const DelConfirmation = ({ listing, showConfirm }) => (
                       px-3 py-1 bg-white">
          <div className="small text-center">Click <i className="fa-solid fa-check"></i> to remove the listing</div>
          <div className="text-center mt-1">
-            <i className="fa-solid fa-check clickable me-3" onClick={handleDel(listing)}></i>
-            <i className="fa-solid fa-xmark clickable" onClick={() => showConfirm(false)}></i>
+            <i className="fa-solid fa-check clickable me-3" onClick={onOk}></i>
+            <i className="fa-solid fa-xmark clickable" onClick={onClose}></i>
          </div>
       </div>
    </div>
@@ -197,7 +201,7 @@ function Listing({ listing }) {
                       position-relative border
                       rounded p-1">
          
-         {isConfirming && <DelConfirmation listing={listing} showConfirm={showConfirm}/>}
+         {isConfirming && <DelConfirmation onOk={() => handleDel(listing)} onClose={() => showConfirm(false)}/>}
          
          <div className="img-div me-1 position-relative">
             <img className="rounded" src={listing.image} alt="Product Image" />
@@ -227,14 +231,34 @@ function Listing({ listing }) {
    )
 }
 
+function SearchBar({ onClose }) {
+   const { searchText } = Store
+   const inputRef = useRef(null)
+   useEffect(onSearchBarMount(inputRef), [])
+   return (
+      <div className="input-group input-group-sm py-1">
+         <span className="input-group-text">
+            <i className="fa-solid fa-magnifying-glass"></i>
+         </span>
+         <input className="form-control fw-light ls-05" ref={inputRef} autoFocus={true} type="search" placeholder="search listings..." value={searchText.value} onInput={handleInput} />
+         <span className="input-group-text">
+            <i className="fa-solid fa-xmark clickable" onClick={onClose}></i>
+         </span>
+      </div>
+   )
+}
+
+
 function App() {
-   const { isLoading, alertText, searchText, isSorted, isRefreshing } = Store
+   const { isLoading, alertText, isSorted, isRefreshing } = Store
+   const [isSearchBarShowing, showSearchBar] = useState(false)
+
    useEffect(onAppMount, [])
 
    return (
       <div className="app border position-relative text-gray-700 d-flex flex-column fw-light ls-05">
          
-         {alertText.value && <Alert msg={alertText.value} onClick={closeAlert} />}
+         {alertText.value && <Alert msg={alertText.value} onClose={closeAlert} />}
          {isLoading.value && <Spinner />}
 
          {/* header */}
@@ -251,14 +275,13 @@ function App() {
                      <span class="ms-1 ls-1 fw-light">Alerty</span></a>
             </div>
             <div className="d-flex justify-content-between">
-               <div className="input-group input-group-sm py-1">
-                  <span className="input-group-text">
-                     <i className="fa-solid fa-magnifying-glass"></i>
-                  </span>
-                  <input className="form-control fw-light ls-05" type="search" placeholder="search listings..." value={searchText.value} onInput={handleInput} />
-               </div>
+               {isSearchBarShowing
+                  ?  <SearchBar onClose={() => showSearchBar(false)} />
+                  :  <div className="py-2 fs-095">
+                        <i className="fa-solid fa-magnifying-glass clickable" onClick={() => showSearchBar(true)} title="Search/Filter the listings..."></i>
+                     </div>}
                <div className="ms-2 py-2">
-                  <i className="fa-solid fa-plus clickable" onClick={handleAdd} title="Add the product listing"></i>
+                  <i className="fa-solid fa-plus clickable fs-120" onClick={handleAdd} title="Add the product listing"></i>
                </div>
             </div>
          </div>

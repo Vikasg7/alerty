@@ -124,3 +124,11 @@ a.clickable:hover {
 .hide-scrollbar::-webkit-scrollbar {
    display: none;
 }
+
+.fs-120 {
+   font-size: 1.20rem;
+}
+
+.fs-095 {
+   font-size: 0.95rem;
+}
