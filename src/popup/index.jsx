@@ -92,7 +92,7 @@ const handleAdd = (event) => {
    setLoading(true)
 }
 
-const handleDel = (listing) => {
+const handleDel = (listing) => (event) => {
    event.preventDefault()
    sendMsg({ action: "DelListing", key: listing.key })
 }
@@ -192,6 +192,23 @@ const DelConfirmation = ({ onOk, onClose }) => (
    </div>
 )
 
+function SearchBar({ onClose }) {
+   const { searchText } = Store
+   const inputRef = useRef(null)
+   useEffect(onSearchBarMount(inputRef), [])
+   return (
+      <div className="input-group input-group-sm py-1">
+         <span className="input-group-text">
+            <i className="fa-solid fa-magnifying-glass"></i>
+         </span>
+         <input className="form-control ls-05" ref={inputRef} autoFocus={true} type="search" placeholder="search listings..." value={searchText.value} onInput={handleInput} />
+         <span className="input-group-text">
+            <i className="fa-solid fa-xmark clickable" onClick={onClose}></i>
+         </span>
+      </div>
+   )
+}
+
 function Listing({ listing }) {
    const change = listing.price.curr - listing.price.last
    const [isConfirming, showConfirm] = useState(false)
@@ -201,7 +218,7 @@ function Listing({ listing }) {
                       position-relative border
                       rounded p-1">
          
-         {isConfirming && <DelConfirmation onOk={() => handleDel(listing)} onClose={() => showConfirm(false)}/>}
+         {isConfirming && <DelConfirmation onOk={handleDel(listing)} onClose={() => showConfirm(false)}/>}
          
          <div className="img-div me-1 position-relative">
             <img className="rounded" src={listing.image} alt="Product Image" />
@@ -213,12 +230,12 @@ function Listing({ listing }) {
          </div>
          
          <div className="d-flex flex-column ps-2 pe-3 gap-2">
-            <a className="line-clamp clickable text-decoration-none color-unset text-gray-800" target="blank" href={listing.url} title={listing.title}>{listing.title}</a>
+            <a className="line-clamp clickable text-decoration-none color-unset text-gray-700" target="blank" href={listing.url} title={listing.title}>{listing.title}</a>
             {listing.inStk &&
             <div className="price gap-3 small">
                <span title="Current price">{toINR(listing.price.curr)}</span>
                {listing.price.curr !== listing.price.last && <Fragment><s className="text-gray-600 ms-3" title="Previous price">{toINR(listing.price.last)}</s></Fragment>}
-               {listing.price.curr < listing.price.last   && <Fragment><span className="ms-3 text-success fw-bolder" title="Discount">{toINR(Math.abs(change))} off</span></Fragment>}
+               {listing.price.curr < listing.price.last   && <Fragment><span className="ms-3 text-success" title="Discount">{toINR(Math.abs(change))} off</span></Fragment>}
             </div>}
             {!listing.inStk && <Fragment><span className="small text-gray-600" title="Out of stock">Currently unavailable</span></Fragment>}
          </div>
@@ -231,24 +248,6 @@ function Listing({ listing }) {
    )
 }
 
-function SearchBar({ onClose }) {
-   const { searchText } = Store
-   const inputRef = useRef(null)
-   useEffect(onSearchBarMount(inputRef), [])
-   return (
-      <div className="input-group input-group-sm py-1">
-         <span className="input-group-text">
-            <i className="fa-solid fa-magnifying-glass"></i>
-         </span>
-         <input className="form-control fw-light ls-05" ref={inputRef} autoFocus={true} type="search" placeholder="search listings..." value={searchText.value} onInput={handleInput} />
-         <span className="input-group-text">
-            <i className="fa-solid fa-xmark clickable" onClick={onClose}></i>
-         </span>
-      </div>
-   )
-}
-
-
 function App() {
    const { isLoading, alertText, isSorted, isRefreshing } = Store
    const [isSearchBarShowing, showSearchBar] = useState(false)
@@ -256,7 +255,7 @@ function App() {
    useEffect(onAppMount, [])
 
    return (
-      <div className="app border position-relative text-gray-700 d-flex flex-column fw-light ls-05">
+      <div className="app border position-relative text-gray-700 d-flex flex-column ls-05">
          
          {alertText.value && <Alert msg={alertText.value} onClose={closeAlert} />}
          {isLoading.value && <Spinner />}
@@ -272,7 +271,7 @@ function App() {
                   href={POPUP_PATH} 
                   title="Open extension as a new TAB">
                      <i class="fa-solid fa-cart-arrow-down"></i>
-                     <span class="ms-1 ls-1 fw-light">Alerty</span></a>
+                     <span class="ms-1 ls-1">Alerty</span></a>
             </div>
             <div className="d-flex justify-content-between">
                {isSearchBarShowing
