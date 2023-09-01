@@ -18,6 +18,3 @@ Read [this detailed article](https://mytrikks.blogspot.com/2023/04/alerty.html) 
 
 ### Report a bug / Request a feature
 Head over to [Issues](https://github.com/Vikasg7/UnQuote-for-Gmail/issues) section to submit bugs in detail and request addition features.
-
-### Known bugs
-- [ ] Notifications doesn't make no sound. (Waitng for browsers to implement this feature)
