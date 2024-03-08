@@ -64,9 +64,11 @@ const Store = createStore()
 const initializeApp = async () => {
    setLoading(true)
    const { IsRefreshing } = await chrome.storage.sync.get(["IsRefreshing"])
+   const { IsSorted } = await chrome.storage.sync.get(["IsSorted"])
    const { Listings } = await chrome.storage.sync.get(["Listings"])
    batch(() => {
       setRefreshing(IsRefreshing)
+      sortListings(IsSorted)
       updateListings(Listings)
       setLoading(false)
    })
@@ -130,9 +132,11 @@ const handleInput = (event) => {
    setSearchText(event.target.value)
 }
 
-const handleSort = (event) => {
+const handleSort = async (event) => {
    event.preventDefault()
-   sortListings(!Store.isSorted.value)
+   const toggled = !Store.isSorted.value
+   await chrome.storage.sync.set({ IsSorted: toggled })
+   sortListings(toggled)
 }
 
 const handleCopyLink = (url) => async (event) => {
