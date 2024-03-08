@@ -145,6 +145,11 @@ const handleCopyLink = (url) => async (event) => {
    setAlertText("Product link copied to the clipboard")
 }
 
+const handleSearchBarClose = (showSearchBar) => () => {
+   setSearchText("")
+   showSearchBar(false)
+}
+
 const onAppMount = () => {
    chrome.runtime.onMessage.addListener(handleMsg)
    initializeApp()
@@ -279,7 +284,7 @@ function App() {
             </div>
             <div className="d-flex justify-content-between">
                {isSearchBarShowing
-                  ?  <SearchBar onClose={() => showSearchBar(false)} />
+                  ?  <SearchBar onClose={handleSearchBarClose(showSearchBar)} />
                   :  <div className="py-2 fs-095">
                         <i className="fa-solid fa-magnifying-glass clickable" onClick={() => showSearchBar(true)} title="Search/Filter the listings..."></i>
                      </div>}
