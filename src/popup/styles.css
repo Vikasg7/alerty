@@ -117,13 +117,13 @@ a.clickable:hover {
 }
 
 .scroll-y::-webkit-scrollbar {
-   background: whitesmoke;
+   background: var(--bs-gray-200);
    height: 8px;
    width: 8px;
 }
 
 .scroll-y::-webkit-scrollbar-thumb {
-   background: var(--bs-gray-300);
+   background: var(--bs-gray-400);
    border: none;
    -webkit-border-radius: 4px;
    border-radius: 4px;
