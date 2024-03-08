@@ -289,7 +289,7 @@ function App() {
          <div className="d-flex flex-column
                          flex-grow-1
                          py-2 px-2
-                         overflow-y-scroll hide-scrollbar">
+                         scroll-y">
             {isEmpty(Store.Listings.value) && (!isLoading.value)
                ? <div className="p-1 mt-2 small">Goto the Amazon/Flipkart product page and Hit <i className="fa-solid fa-plus"></i> button to add the product listing.</div>
                : Store.FilteredSorted.value.map((listing) => <Listing key={listing.key} listing={listing} />) }

@@ -21,6 +21,6 @@ Head over to [Issues](https://github.com/Vikasg7/UnQuote-for-Gmail/issues) secti
 
 ### TODO
 - [ ] fix Refresh Prices icon which is not animating.
-- [ ] add scrollbar
+- [x] add scrollbar
 - [ ] save the sort state
 - [x] add makefile
