@@ -18,9 +18,3 @@ Read [this detailed article](https://mytrikks.blogspot.com/2023/04/alerty.html) 
 
 ### Report a bug / Request a feature
 Head over to [Issues](https://github.com/Vikasg7/UnQuote-for-Gmail/issues) section to submit bugs in detail and request addition features.
-
-### TODO
-- [ ] fix Refresh Prices icon which is not animating.
-- [x] add scrollbar
-- [x] save the sort state
-- [x] add makefile
