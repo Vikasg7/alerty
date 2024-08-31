@@ -33,14 +33,14 @@ const getListing = {
          const resp = await fetch(url)
          const html = await resp.text()
          const $ = cheerio.load(html)
-         const listing = $("._2c7YLP")
+         const listing = $("._48O0EI")
          if (!listing.length) throw new Error("Error getting the product listing.");
-         const title = $("h1.yhB1nd").text()
+         const title = $("h1._6EBuvT").text()
          if (!title) throw new Error("Couldn't get product name.");
-         const image = $("._3kidJX img._396cs4").attr("src")
-         const price = $("._25b18c ._30jeq3._16Jk6d").text().replace(/[₹,]/g, '')
+         const image = $("._6lpKCl img").attr("src")
+         const price = $(".CxhGGd").text().replace(/[₹,]/g, '')
          if (!price) throw new Error("Couldn't get product price.");
-         const inStk = $("div._16FRp0").text().toLowerCase() !== "sold out"
+         const inStk = $(".Z8JjpR").text().toLowerCase() !== "sold out"
          const time = Date.now()
          return [{ key, title, type, image, price: { curr: Number(price), last: Number(price) }, inStk, url, time }, null]
       } catch (e) {
