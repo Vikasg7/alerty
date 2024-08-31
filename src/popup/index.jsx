@@ -280,7 +280,7 @@ function App() {
                   href={POPUP_PATH} 
                   title="Open extension as a new TAB">
                      <i class="fa-solid fa-cart-arrow-down"></i>
-                     <span class="ms-1 ls-1">Alerty</span></a>
+                     <span class="ms-1 ls-1 fw-bold">Alerty</span></a>
             </div>
             <div className="d-flex justify-content-between">
                {isSearchBarShowing
