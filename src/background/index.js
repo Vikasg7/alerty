@@ -13,7 +13,7 @@ async function sendMsg(msg) {
 const getListing = {
    amazon: async ({ key, url, type }) => {
       try {
-         const resp = await fetch(`https://www.amazon.in/s?k=${key}`)
+         const resp = await fetch(`https://www.amazon.in/s?k=${key}&rh=p_n_availability%3A1318485031`)
          const html = await resp.text()
          const $ = cheerio.load(html)
          const listing = $(`div[data-asin=${key}]`)
