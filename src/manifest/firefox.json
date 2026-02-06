@@ -1,7 +1,7 @@
 {
    "name": "Alerty",
    "description": "An extension to alert users on price drops in and availability of Amazon/Flipkart Products",
-   "version": "1.0.7",
+   "version": "1.0.8",
    "manifest_version": 3,
    "icons": {
       "128": "assets/cart-arrow-down-solid.png"

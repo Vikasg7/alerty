@@ -33,14 +33,12 @@ const getListing = {
          const resp = await fetch(url)
          const html = await resp.text()
          const $ = cheerio.load(html)
-         const listing = $("._48O0EI")
-         if (!listing.length) throw new Error("Error getting the product listing.");
-         const title = $("h1._6EBuvT").text()
+         const title = $("h1.CEn5rD").text()
          if (!title) throw new Error("Couldn't get product name.");
-         const image = $("._6lpKCl img").attr("src")
-         const price = $(".CxhGGd").text().replace(/[₹,]/g, '')
+         const image = $(".IgiqRJ img").attr("src")
+         const price = $(".bnqy13").text().replace(/[₹,]/g, '')
          if (!price) throw new Error("Couldn't get product price.");
-         const inStk = $(".Z8JjpR").text().toLowerCase() !== "sold out"
+         const inStk = $(".VkYRUs").text().toLowerCase() !== "sold out"
          const time = Date.now()
          return [{ key, title, type, image, price: { curr: Number(price), last: Number(price) }, inStk, url, time }, null]
       } catch (e) {
@@ -51,13 +49,15 @@ const getListing = {
 
 async function getTabInfo() {
    const [tab] = await chrome.tabs.query({ active: true })
-   const amazonKey = tab?.url?.match(/\/dp\/([\w\d]{10})/i)?.[1] // ASIN
+   const amazonKey = tab?.url?.match(/\/dp\/([\w\d]{10})/i)?.[1] ||
+                     tab?.url?.match(/\/gp\/product\/([\w\d]{10})/i)?.[1] // ASIN
    if (amazonKey) {
       return { type: "amazon", key: amazonKey, url: `https://amazon.in/dp/${amazonKey}` }
    }
-   const flipkartPid    = tab?.url?.match(/pid=([\w\d]{0,16})/i)     // pid=XXXXXXXXXXXXXXXX
+   const flipkartPid    = tab?.url?.match(/pid\=([\w\d]{0,16})/i)     // pid=XXXXXXXXXXXXXXXX
    const flipkartItmNum = tab?.url?.match(/\/p\/(itm[\w\d]{0,14})/i) // itmXXXXXXXXXXXXXXX
    const flipkartKey    = (flipkartPid ?? flipkartItmNum)?.[1]
+   console.log({ flipkartPid, flipkartItmNum, flipkartKey })
    if (flipkartKey) {
       const parsed = new URL(tab.url)
       parsed.hostname = 'https://dl.flipkart.com'
