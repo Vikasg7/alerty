@@ -297,7 +297,7 @@ body {
 }
 
 .products {
-    padding: 4px 14px 16px 14px;
+    padding: 0px 12px 0px 16px;
 }
 
 .product-card {
@@ -307,7 +307,7 @@ body {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 16px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     transition: all 0.2s;
     position: relative;
     box-shadow: var(--shadow);
@@ -329,7 +329,6 @@ body {
     align-items: center;
     justify-content: center;
     padding: 6px;
-    border: 1px solid var(--line);
 }
 
 .product-image {
@@ -350,17 +349,17 @@ body {
 
 .product-header {
     display: flex;
-    justify-content: space-between;
-    gap: 8px;
     align-items: center;
-    margin-top: -2px
+    margin-top: -2px;
 }
 
 .product-title {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
     line-height: 1.4;
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -385,7 +384,16 @@ body {
     font-size: 16px;
     transition: color 0.2s;
     flex-shrink: 0;
-    align-self: flex-start;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.product-card:hover .remove-btn {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .remove-btn:hover {
@@ -493,7 +501,6 @@ body {
 
 .pull-to-refresh-container::-webkit-scrollbar-thumb {
     background: #c8c8c8;
-    border-radius: 3px;
 }
 
 .pull-to-refresh-container::-webkit-scrollbar-thumb:hover {
