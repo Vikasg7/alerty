@@ -6,7 +6,7 @@ async function sendMsg(msg) {
    try {
       await chrome.runtime.sendMessage(msg)
    } catch (error) {
-      console.log(error.message, msg)
+      console.error("Error (sendMsg):", error.message)
    }
 }
 
@@ -22,8 +22,10 @@ const getListing = {
          const image = listing.find("img").eq(0).attr("src")
          const price = listing.find("span.a-price-whole").eq(0).text().replace(/,/g, '')
          const inStk = !!price
+         const rating = listing.find("div[data-cy='reviews-block'] span[aria-hidden='true']").eq(0).text()
+         const ratingCnt = listing.find("div[data-cy='reviews-block'] a[aria-label*='ratings']").eq(0).attr("aria-label").split(" ")[0].replace(/,/g, '')
          const time = Date.now()
-         return [{ key, title, type, image, price: { curr: Number(price), last: Number(price) }, inStk, url, time }, null]
+         return [{ key, title, type, image, price: { curr: Number(price), last: Number(price) }, inStk, url, time, rating: Number(rating), ratingCnt: Number(ratingCnt)}, null]
       } catch (e) {
          return [null, e.message]
       }
@@ -33,14 +35,18 @@ const getListing = {
          const resp = await fetch(url)
          const html = await resp.text()
          const $ = cheerio.load(html)
-         const title = $("h1.CEn5rD").text()
+         const script = $("script#jsonLD").text()
+         const json = JSON.parse(script)[0]
+         const title = json.name
          if (!title) throw new Error("Couldn't get product name.");
-         const image = $(".IgiqRJ img").attr("src")
-         const price = $(".bnqy13").text().replace(/[₹,]/g, '')
+         const image = json.image[0]
+         const price = json.offers?.price
          if (!price) throw new Error("Couldn't get product price.");
-         const inStk = $(".VkYRUs").text().toLowerCase() !== "sold out"
+         const inStk = json.offers.availability === "https://schema.org/InStock"
          const time = Date.now()
-         return [{ key, title, type, image, price: { curr: Number(price), last: Number(price) }, inStk, url, time }, null]
+         const rating = json.aggregateRating?.ratingValue
+         const ratingCnt = json.aggregateRating?.ratingCount
+         return [{ key, title, type, image, price: { curr: Number(price), last: Number(price) }, inStk, url, time, rating: Number(rating), ratingCnt: Number(ratingCnt) }, null]
       } catch (e) {
          return [null, e.message]
       }
@@ -48,7 +54,7 @@ const getListing = {
 }
 
 async function getTabInfo() {
-   const [tab] = await chrome.tabs.query({ active: true })
+   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
    const amazonKey = tab?.url?.match(/\/dp\/([\w\d]{10})/i)?.[1] ||
                      tab?.url?.match(/\/gp\/product\/([\w\d]{10})/i)?.[1] // ASIN
    if (amazonKey) {
@@ -57,7 +63,6 @@ async function getTabInfo() {
    const flipkartPid    = tab?.url?.match(/pid\=([\w\d]{0,16})/i)     // pid=XXXXXXXXXXXXXXXX
    const flipkartItmNum = tab?.url?.match(/\/p\/(itm[\w\d]{0,14})/i) // itmXXXXXXXXXXXXXXX
    const flipkartKey    = (flipkartPid ?? flipkartItmNum)?.[1]
-   console.log({ flipkartPid, flipkartItmNum, flipkartKey })
    if (flipkartKey) {
       const parsed = new URL(tab.url)
       parsed.hostname = 'https://dl.flipkart.com'
@@ -76,6 +81,7 @@ async function handleMsg(msg) {
          const [listing, err] = await getListing[tab.type](tab)
          if (err) return await sendMsg({ action: "Error", error: err });
          Listings[tab.key] = listing
+         console.log("New listing added:", listing)
          await chrome.storage.sync.set({ Listings })
          await sendMsg({ action: "Listings", Listings })
          break
@@ -118,21 +124,19 @@ async function notify(curr, fresh) {
    }
 }
 
-async function updateListing(curr, fresh) {
-   curr.inStk = fresh.inStk
-   if (fresh.inStk && curr.price.curr !== fresh.price.curr) {
-      curr.price.last = curr.price.curr
-      curr.price.curr = fresh.price.curr
-   }
-}
-
 async function refreshAll(Listings) {
-   for (const listing of Object.values(Listings)) {
+   for (const key in Listings) {
+      const listing = Listings[key]
       const [fresh, error] = await getListing[listing.type](listing)
-      if (!error) {
-         await notify(listing, fresh)
-         await updateListing(listing, fresh)
+      if (error) {
+         console.error(`Error refreshing ${key}: `, error)
+         continue;
       }
+      await notify(listing, fresh)
+      if (fresh.inStk && listing.price.curr !== fresh.price.curr) {
+         fresh.price.last = listing.price.curr
+      }
+      Listings[key] = fresh
    }
 }
 
@@ -191,8 +195,11 @@ async function handleAlarm() {
       // might have been updated (deletion or addition) during 
       // refresh was taking place.
       const { Listings } = await chrome.storage.sync.get(["Listings"])
+      console.log("Before: ",Listings)
+      console.log("Listings from refresh: ", listings)
       merge(Listings, listings)
-   
+      console.log("After: ", Listings)
+
       await chrome.storage.sync.set({ Listings })
       await sendMsg({ action: "Listings", Listings})
       

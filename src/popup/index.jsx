@@ -21,6 +21,16 @@ const toINR = (number) => (
    })
 )
 
+function getRatingColor(rating) {
+   const parsed = Number.parseFloat(rating)
+   if (!Number.isFinite(parsed)) return "#8a8a8a"
+
+   // 1 -> red, 3 -> yellow/orange, 5 -> green
+   const clamped = Math.max(1, Math.min(5, parsed))
+   const hue = ((clamped - 1) / 4) * 120
+   return `hsl(${hue} 82% 42%)`
+}
+
 // Retry once after a second to handle "Error: Could not establish connection. Receiving end does not exist."
 async function sendMsg(msg) {
    try {
@@ -425,7 +435,7 @@ function Listing({ listing }) {
    const change = listing.price.curr - listing.price.last
    const [isConfirming, showConfirm] = useState(false)
    const source = listing.url.includes('amazon') ? 'Amazon' : listing.url.includes('flipkart') ? 'Flipkart' : 'Unknown'
-   
+   const ratingColor = getRatingColor(listing.rating)
    return (
       <div className="product-card">
          {isConfirming && <DelConfirmation onOk={handleDel(listing)} onClose={() => showConfirm(false)}/>}
@@ -437,6 +447,14 @@ function Listing({ listing }) {
          <div className="product-info">
             <div className="product-meta">
                <span className="store-name">{source}</span>
+               <div className="product-rating" aria-label="Product rating">
+                  <span className="product-rating-value">
+                     {listing.rating}
+                     <i className="fa-solid fa-star" aria-hidden="true" style={{ color: ratingColor }}></i>
+                  </span>
+                  <span className="product-rating-divider" aria-hidden="true">|</span>
+                  <span className="product-rating-count">{listing.ratingCnt}</span>
+               </div>
             </div>
 
             <div className="product-header">
@@ -444,8 +462,7 @@ function Listing({ listing }) {
                   <a href={listing.url} target="_blank" title={listing.title}>{listing.title}</a>
                </h3>
             </div>
-            
-            
+
             <div className="price-section">
                <span className="current-price">{toINR(listing.price.curr)}</span>
                {listing.inStk && (listing.price.curr !== listing.price.last) && (
@@ -463,7 +480,9 @@ function Listing({ listing }) {
             </div>
 
          </div>
-         <button className="remove-btn" onClick={() => showConfirm(true)} title="Remove">×</button>
+         <button className="remove-btn" onClick={() => showConfirm(true)} title="Remove" aria-label="Remove listing">
+            <i className="fa-solid fa-trash-can" aria-hidden="true"></i>
+         </button>
       </div>
    )
 }
