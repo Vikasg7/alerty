@@ -233,7 +233,7 @@ body {
 
 /* List Header */
 .list-header {
-    padding: var(--space-5) var(--space-5) var(--space-3) var(--space-10);
+    padding: var(--space-5) var(--space-5) var(--space-4) var(--space-10);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -297,7 +297,7 @@ body {
 
 .sort-menu {
     position: absolute;
-    top: var(--space-10);
+    top: var(--space-8);
     right: 0;
     list-style: none;
     padding: var(--space-3);
@@ -417,8 +417,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    gap: var(--space-2);
-    padding: var(--space-2) 0;
+    gap: var(--space-3);
 }
 
 .product-header {
@@ -497,7 +496,7 @@ body {
     border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     background: var(--surface);
-    color: var(--ink-muted);
+    color: var(--ink-soft);
     cursor: pointer;
     font-size: var(--font-size-lg);
     line-height: var(--line-height-tight);
@@ -507,9 +506,8 @@ body {
     transition: all var(--duration-fast) var(--easing-standard);
     flex-shrink: 0;
     position: absolute;
-    top: auto;
-    bottom: var(--space-2);
-    right: var(--space-4);
+    top: calc(-1 * var(--space-4));
+    right: calc(-1 * var(--space-4));
     opacity: 0;
     pointer-events: none;
     z-index: var(--z-card-action);
@@ -517,7 +515,7 @@ body {
 }
 
 .remove-btn i {
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
     line-height: var(--line-height-tight);
 }
 
@@ -534,7 +532,7 @@ body {
 
 .product-meta {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: var(--space-4);
     justify-content: space-between;
     font-size: var(--font-size-xs);
@@ -555,9 +553,9 @@ body {
 }
 
 .out-of-stock {
-    align-self: flex-start;
     display: inline-flex;
     align-items: center;
+    align-self: center;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-4);
     background: var(--bg);
@@ -582,6 +580,17 @@ body {
     margin-top: var(--space-4);
 }
 
+.price-section.out-of-stock-view {
+    align-items: center;
+}
+
+.price-group {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
 .current-price {
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-bold);
@@ -597,29 +606,27 @@ body {
 }
 
 .price-drop {
-    align-self: flex-start;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-2) var(--space-4);
-    background: var(--success-bg);
+    padding: 0;
+    background: transparent;
     color: var(--success);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
+    border-radius: 0;
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     line-height: var(--line-height-tight);
 }
 
 .price-increase {
-    align-self: flex-start;
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-2) var(--space-4);
-    background: var(--danger-bg);
+    padding: 0;
+    background: transparent;
     color: var(--danger);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
+    border-radius: 0;
+    font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     line-height: var(--line-height-tight);
 }

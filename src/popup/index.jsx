@@ -88,7 +88,15 @@ const initializeApp = async () => {
    setLoading(true)
    const { IsRefreshing } = await chrome.storage.sync.get(["IsRefreshing"])
    const { SortBy } = await chrome.storage.sync.get(["SortBy"])
-   const { Listings } = await chrome.storage.sync.get(["Listings"])
+   let Listings = {}
+   try {
+      const snapshot = await chrome.runtime.sendMessage({ action: "GetListingsSnapshot" })
+      Listings = snapshot?.Listings || {}
+   } catch (e) {
+      await sleep(1)
+      const snapshot = await chrome.runtime.sendMessage({ action: "GetListingsSnapshot" })
+      Listings = snapshot?.Listings || {}
+   }
    batch(() => {
       setRefreshing(IsRefreshing)
       setSortBy(SortBy || "recent")
@@ -124,7 +132,6 @@ const handleDel = (listing) => (event) => {
 
 const handlePullToRefresh = () => {
    if (!Store.isLoading.value && !Store.isRefreshing.value) {
-      console.log("Pull to refresh triggered")
       sendMsg({ action: "RefreshListings" })
    }
 }
@@ -182,7 +189,6 @@ const handleSearchToggle = (showSearchBar, isShowing) => (event) => {
 const onAppMount = () => {
    chrome.runtime.onMessage.addListener(handleMsg)
    initializeApp()
-   console.log("onAppMount: Registered message listener and initialized app")
    // on App Un-mount
    return () => chrome.runtime.onMessage.removeListener(handleMsg)
 }
@@ -463,11 +469,13 @@ function Listing({ listing }) {
                </h3>
             </div>
 
-            <div className="price-section">
-               <span className="current-price">{toINR(listing.price.curr)}</span>
-               {listing.inStk && (listing.price.curr !== listing.price.last) && (
-                  <span className="original-price">{toINR(listing.price.last)}</span>
-               )}
+            <div className={`price-section ${!listing.inStk ? 'out-of-stock-view' : ''}`}>
+               <div className="price-group">
+                  <span className="current-price">{toINR(listing.price.curr)}</span>
+                  {listing.inStk && (listing.price.curr !== listing.price.last) && (
+                     <span className="original-price">{toINR(listing.price.last)}</span>
+                  )}
+               </div>
                {listing.inStk && (change < 0) && (
                   <span className="price-drop">↓ {toINR(Math.abs(change))}</span>
                )}
@@ -481,7 +489,7 @@ function Listing({ listing }) {
 
          </div>
          <button className="remove-btn" onClick={() => showConfirm(true)} title="Remove" aria-label="Remove listing">
-            <i className="fa-solid fa-trash-can" aria-hidden="true"></i>
+            <i className="fa-solid fa-xmark" aria-hidden="true"></i>
          </button>
       </div>
    )

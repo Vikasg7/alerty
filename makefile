@@ -8,7 +8,7 @@ chrome:
 	@cp -u src/popup/index.html src/popup/styles.css dist/chrome/popup
 	@cp -u src/manifest/chrome.json dist/chrome/manifest.json
 	@node_modules/.bin/babel src/popup/index.jsx --out-dir dist/chrome/popup/ --presets @babel/preset-react,minify
-	@node_modules/.bin/babel src/background/index.js --out-dir dist/chrome/background/ --presets minify
+	@node_modules/.bin/babel src/background/index.js src/background/listings-db.js --out-dir dist/chrome/background/ --presets minify
 	@cd dist/chrome && zip -rq ../chrome.zip * && cd ..
 
 firefox:
@@ -18,5 +18,5 @@ firefox:
 	@cp -u src/manifest/firefox.json dist/firefox/manifest.json
 	@cp -u src/background/index.html dist/firefox/background/
 	@node_modules/.bin/babel src/popup/index.jsx --out-dir dist/firefox/popup/ --presets @babel/preset-react,minify
-	@node_modules/.bin/babel src/background/index.js --out-dir dist/firefox/background/ --presets minify
+	@node_modules/.bin/babel src/background/index.js src/background/listings-db.js --out-dir dist/firefox/background/ --presets minify
 	@cd dist/firefox && zip -rq ../firefox.zip * && cd ..

@@ -1,6 +1,12 @@
 import "../lib/cheerio-1.0.0.min.js"
+import "./listings-db.js"
+
+const { initListingsDb, getAllListings, getListingByKey, upsertListing, removeListing, replaceAllListings } = ListingsDB
 
 globalThis.chrome = globalThis.browser ? globalThis.browser : globalThis.chrome
+const dbReadyPromise = initListingsDb().catch((error) => {
+   console.error("Error (initListingsDb):", error.message)
+})
 
 async function sendMsg(msg) {
    try {
@@ -71,25 +77,25 @@ async function getTabInfo() {
    }
 }
 
-async function handleMsg(msg) {
+async function handleMsgAsync(msg, sendResponse) {
+   await dbReadyPromise
    switch (msg.action) {
       case "AddListing": {
-         const { Listings } = await chrome.storage.sync.get(["Listings"])
          const tab = await getTabInfo()
          if (!tab) return await sendMsg({ action: "Error", error: "Not an Amazon/Flipkart product page" });
-         if (Listings[tab.key]) return await sendMsg({ action: "Error", error: "Listing already exists" });
+         const existing = await getListingByKey(tab.key)
+         if (existing) return await sendMsg({ action: "Error", error: "Listing already exists" });
          const [listing, err] = await getListing[tab.type](tab)
          if (err) return await sendMsg({ action: "Error", error: err });
-         Listings[tab.key] = listing
-         console.log("New listing added:", listing)
-         await chrome.storage.sync.set({ Listings })
+         await upsertListing(listing)
+         const Listings = await getAllListings()
          await sendMsg({ action: "Listings", Listings })
+         await setBadge(Listings)
          break
       }
       case "DelListing": {
-         const { Listings } = await chrome.storage.sync.get(["Listings"])
-         delete Listings[msg.key]
-         await chrome.storage.sync.set({ Listings })
+         await removeListing(msg.key)
+         const Listings = await getAllListings()
          await sendMsg({ action: "Listings", Listings })
          await setBadge(Listings)
          break
@@ -98,7 +104,20 @@ async function handleMsg(msg) {
          await handleAlarm()
          break
       }
+      case "GetListingsSnapshot": {
+         const Listings = await getAllListings()
+         sendResponse?.({ Listings })
+         break
+      }
    }
+}
+
+function handleMsg(msg, sender, sendResponse) {
+   handleMsgAsync(msg, sendResponse).catch(async (error) => {
+      console.error("Error (handleMsg):", error.message)
+      await sendMsg({ action: "Error", error: error.message })
+      sendResponse?.({ error: error.message })
+   })
    return true
 }
 
@@ -124,19 +143,48 @@ async function notify(curr, fresh) {
    }
 }
 
+function buildNextListing(curr, fresh) {
+   const rawPrevCurr = Number(curr?.price?.curr ?? fresh.price.curr)
+   const prevCurr = Number.isFinite(rawPrevCurr) ? rawPrevCurr : 0
+   const rawPrevLast = Number(curr?.price?.last ?? prevCurr)
+   const prevLast = Number.isFinite(rawPrevLast) ? rawPrevLast : prevCurr
+   const freshCurr = Number(fresh.price.curr)
+   const hasFreshPrice = Number.isFinite(freshCurr) && freshCurr > 0
+   const nextCurr = fresh.inStk
+      ? (hasFreshPrice ? freshCurr : prevCurr)
+      : prevCurr
+   const priceChanged = fresh.inStk &&
+      hasFreshPrice &&
+      Number.isFinite(prevCurr) &&
+      nextCurr !== prevCurr
+
+   return {
+      ...curr,
+      ...fresh,
+      price: {
+         curr: nextCurr,
+         last: priceChanged ? prevCurr : prevLast
+      }
+   }
+}
+
+async function refreshListing(curr) {
+   const [fresh, error] = await getListing[curr.type](curr)
+   if (error) return [curr, error]
+
+   const next = buildNextListing(curr, fresh)
+   await notify(curr, next)
+   return [next, null]
+}
+
 async function refreshAll(Listings) {
    for (const key in Listings) {
-      const listing = Listings[key]
-      const [fresh, error] = await getListing[listing.type](listing)
+      const [next, error] = await refreshListing(Listings[key])
       if (error) {
          console.error(`Error refreshing ${key}: `, error)
          continue;
       }
-      await notify(listing, fresh)
-      if (fresh.inStk && listing.price.curr !== fresh.price.curr) {
-         fresh.price.last = listing.price.curr
-      }
-      Listings[key] = fresh
+      Listings[key] = next
    }
 }
 
@@ -166,8 +214,10 @@ async function showNotification(msg, key, image, title) {
 }
 
 async function handleNotification(key) {
-   const { Listings } = await chrome.storage.sync.get(["Listings"])
-   await chrome.tabs.create({ url: Listings[key].url})
+   await dbReadyPromise
+   const listing = await getListingByKey(key)
+   if (!listing) return;
+   await chrome.tabs.create({ url: listing.url })
    await chrome.notifications.clear(key)
 }
 
@@ -183,26 +233,23 @@ async function setBadge(listings) {
 
 async function handleAlarm() {
    try {
-      const { Listings: listings } = await chrome.storage.sync.get(["Listings"])
-      if (!listings) return;
-   
+      await dbReadyPromise
+      const listings = await getAllListings()
+
       await chrome.storage.sync.set({ IsRefreshing: true })
       await sendMsg({ action: "IsRefreshing", IsRefreshing: true })
-   
-      await refreshAll(listings)
-   
-      // Taking care of the case where Listings in the storage 
-      // might have been updated (deletion or addition) during 
-      // refresh was taking place.
-      const { Listings } = await chrome.storage.sync.get(["Listings"])
-      console.log("Before: ",Listings)
-      console.log("Listings from refresh: ", listings)
-      merge(Listings, listings)
-      console.log("After: ", Listings)
 
-      await chrome.storage.sync.set({ Listings })
+      await refreshAll(listings)
+
+      // Taking care of the case where Listings in the storage
+      // might have been updated (deletion or addition) during
+      // refresh was taking place.
+      const Listings = await getAllListings()
+      merge(Listings, listings)
+
+      await replaceAllListings(Listings)
       await sendMsg({ action: "Listings", Listings})
-      
+
       await setBadge(Listings)
    } finally {
       await chrome.storage.sync.set({ IsRefreshing: false })
@@ -211,8 +258,7 @@ async function handleAlarm() {
 }
 
 async function setInitialState() {
-   const { Listings } = await chrome.storage.sync.get(["Listings"])
-   if (!Listings) await chrome.storage.sync.set({ Listings: {} }) 
+   await dbReadyPromise
    await chrome.storage.sync.set({ IsRefreshing: false })
 }
 
