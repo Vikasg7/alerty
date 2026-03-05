@@ -599,10 +599,24 @@ body {
 }
 
 .original-price {
+    position: relative;
+    display: inline-block;
     font-size: var(--font-size-sm);
     color: var(--ink-soft);
-    text-decoration: line-through;
     line-height: var(--line-height-tight);
+    text-decoration: none;
+}
+
+.original-price::after {
+    content: "";
+    position: absolute;
+    left: -2%;
+    top: 52%;
+    width: 104%;
+    border-top: 1px solid currentColor;
+    transform: rotate(-6deg);
+    transform-origin: center;
+    pointer-events: none;
 }
 
 .price-drop {
@@ -614,7 +628,7 @@ body {
     color: var(--success);
     border-radius: 0;
     font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     line-height: var(--line-height-tight);
 }
 
@@ -627,7 +641,7 @@ body {
     color: var(--danger);
     border-radius: 0;
     font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     line-height: var(--line-height-tight);
 }
 
