@@ -624,8 +624,7 @@ body {
     align-items: center;
     gap: var(--space-2);
     padding: 0;
-    background: transparent;
-    color: var(--success);
+    color: hsl(120 70% 32%);
     border-radius: 0;
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
@@ -637,8 +636,7 @@ body {
     align-items: center;
     gap: var(--space-2);
     padding: 0;
-    background: transparent;
-    color: var(--danger);
+    color: hsl(0 80% 58%);
     border-radius: 0;
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
