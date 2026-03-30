@@ -82,26 +82,36 @@ async function handleMsgAsync(msg, sendResponse) {
    switch (msg.action) {
       case "AddListing": {
          const tab = await getTabInfo()
-         if (!tab) return await sendMsg({ action: "Error", error: "Not an Amazon/Flipkart product page" });
+         if (!tab) {
+            sendResponse?.({ ok: false, error: "Not an Amazon/Flipkart product page" })
+            return
+         }
          const existing = await getListingByKey(tab.key)
-         if (existing) return await sendMsg({ action: "Error", error: "Listing already exists" });
+         if (existing) {
+            sendResponse?.({ ok: false, error: "Listing already exists" })
+            return
+         }
          const [listing, err] = await getListing[tab.type](tab)
-         if (err) return await sendMsg({ action: "Error", error: err });
+         if (err) {
+            sendResponse?.({ ok: false, error: err })
+            return
+         }
          await upsertListing(listing)
          const Listings = await getAllListings()
-         await sendMsg({ action: "Listings", Listings })
          await setBadge(Listings)
+         sendResponse?.({ ok: true, Listings })
          break
       }
       case "DelListing": {
          await removeListing(msg.key)
          const Listings = await getAllListings()
-         await sendMsg({ action: "Listings", Listings })
          await setBadge(Listings)
+         sendResponse?.({ ok: true, Listings })
          break
       }
       case "RefreshListings": {
          await handleAlarm()
+         sendResponse?.({ ok: true })
          break
       }
       case "GetListingsSnapshot": {
@@ -109,14 +119,16 @@ async function handleMsgAsync(msg, sendResponse) {
          sendResponse?.({ Listings })
          break
       }
+      default: {
+         sendResponse?.({ ok: false, error: `Unknown action: ${msg.action}` })
+      }
    }
 }
 
 function handleMsg(msg, sender, sendResponse) {
    handleMsgAsync(msg, sendResponse).catch(async (error) => {
       console.error("Error (handleMsg):", error.message)
-      await sendMsg({ action: "Error", error: error.message })
-      sendResponse?.({ error: error.message })
+      sendResponse?.({ ok: false, error: error.message })
    })
    return true
 }

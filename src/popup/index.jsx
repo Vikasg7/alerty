@@ -31,13 +31,18 @@ function getRatingColor(rating) {
    return `hsl(${hue} 82% 42%)`
 }
 
+function formatRating(rating) {
+   const parsed = Number.parseFloat(rating)
+   return Number.isFinite(parsed) ? parsed.toFixed(1) : rating
+}
+
 // Retry once after a second to handle "Error: Could not establish connection. Receiving end does not exist."
-async function sendMsg(msg) {
+async function requestBackground(msg) {
    try {
-      await chrome.runtime.sendMessage(msg)
+      return await chrome.runtime.sendMessage(msg)
    } catch (e) {
       await sleep(1)
-      await chrome.runtime.sendMessage(msg)
+      return await chrome.runtime.sendMessage(msg)
    }
 }
 
@@ -90,11 +95,11 @@ const initializeApp = async () => {
    const { SortBy } = await chrome.storage.sync.get(["SortBy"])
    let Listings = {}
    try {
-      const snapshot = await chrome.runtime.sendMessage({ action: "GetListingsSnapshot" })
+      const snapshot = await requestBackground({ action: "GetListingsSnapshot" })
       Listings = snapshot?.Listings || {}
    } catch (e) {
       await sleep(1)
-      const snapshot = await chrome.runtime.sendMessage({ action: "GetListingsSnapshot" })
+      const snapshot = await requestBackground({ action: "GetListingsSnapshot" })
       Listings = snapshot?.Listings || {}
    }
    batch(() => {
@@ -119,20 +124,70 @@ const closeAlert = (event) => {
    setAlertText("")
 }
 
-const handleAdd = (event) => {
+const handleAdd = async (event) => {
    event.preventDefault()
-   !Store.isLoading.value && sendMsg({ action: "AddListing" })
-   setLoading(true)
+   if (Store.isLoading.value) return
+
+   batch(() => {
+      setLoading(true)
+      setAlertText("")
+   })
+
+   try {
+      const response = await requestBackground({ action: "AddListing" })
+      batch(() => {
+         if (response?.ok) {
+            updateListings(response.Listings || {})
+         } else {
+            setAlertText(response?.error || "Couldn't add listing")
+         }
+         setLoading(false)
+      })
+   } catch (error) {
+      batch(() => {
+         setAlertText(error?.message || "Couldn't add listing")
+         setLoading(false)
+      })
+   }
 }
 
-const handleDel = (listing) => (event) => {
+const handleDel = (listing) => async (event) => {
    event.preventDefault()
-   sendMsg({ action: "DelListing", key: listing.key })
+   if (Store.isLoading.value) return
+
+   batch(() => {
+      setLoading(true)
+      setAlertText("")
+   })
+
+   try {
+      const response = await requestBackground({ action: "DelListing", key: listing.key })
+      batch(() => {
+         if (response?.ok) {
+            updateListings(response.Listings || {})
+         } else {
+            setAlertText(response?.error || "Couldn't remove listing")
+         }
+         setLoading(false)
+      })
+   } catch (error) {
+      batch(() => {
+         setAlertText(error?.message || "Couldn't remove listing")
+         setLoading(false)
+      })
+   }
 }
 
-const handlePullToRefresh = () => {
+const handlePullToRefresh = async () => {
    if (!Store.isLoading.value && !Store.isRefreshing.value) {
-      sendMsg({ action: "RefreshListings" })
+      try {
+         const response = await requestBackground({ action: "RefreshListings" })
+         if (response && !response.ok) {
+            setAlertText(response.error || "Couldn't refresh listings")
+         }
+      } catch (error) {
+         setAlertText(error?.message || "Couldn't refresh listings")
+      }
    }
 }
 
@@ -455,7 +510,7 @@ function Listing({ listing }) {
                <span className="store-name">{source}</span>
                <div className="product-rating" aria-label="Product rating">
                   <span className="product-rating-value">
-                     {listing.rating}
+                     {formatRating(listing.rating)}
                      <i className="fa-solid fa-star" aria-hidden="true" style={{ color: ratingColor }}></i>
                   </span>
                   <span className="product-rating-divider" aria-hidden="true">|</span>
