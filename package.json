@@ -1,11 +1,11 @@
 {
   "name": "alerty",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "make all",
-    "watch": "nodemon --watch src --watch manifest --watch lib --watch assets -e html,css,js,json,jsx --exec make all"
+    "watch": "nodemon --watch src -e html,css,js,json,jsx --exec make all"
   },
   "keywords": [],
   "author": "",

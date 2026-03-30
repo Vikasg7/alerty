@@ -17,8 +17,4 @@ A browser extension to alert users in India on price drops in/availability of Am
 Read [this detailed article](https://mytrikks.blogspot.com/2023/04/alerty.html) about how it works and its features.
 
 ### Report a bug / Request a feature
-Head over to [Issues](https://github.com/Vikasg7/UnQuote-for-Gmail/issues) section to submit bugs in detail and request addition features.
-
-### TODO
-- [ ] Listing already added when adding a listing. Investigate
-- [ ] the rating of 4 should be shown as 4.0
+Head over to [Issues](https://github.com/Vikasg7/alerty/issues) section to submit bugs in detail and request additional features.

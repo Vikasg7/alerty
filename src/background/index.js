@@ -29,7 +29,8 @@ const getListing = {
          const price = listing.find("span.a-price-whole").eq(0).text().replace(/,/g, '')
          const inStk = !!price
          const rating = listing.find("div[data-cy='reviews-block'] span[aria-hidden='true']").eq(0).text()
-         const ratingCnt = listing.find("div[data-cy='reviews-block'] a[aria-label*='ratings']").eq(0).attr("aria-label").split(" ")[0].replace(/,/g, '')
+         const ratingLabel = listing.find("div[data-cy='reviews-block'] a[aria-label*='ratings']").eq(0).attr("aria-label") || ""
+         const ratingCnt = ratingLabel.split(" ")[0].replace(/,/g, '')
          const time = Date.now()
          return [{ key, title, type, image, price: { curr: Number(price), last: Number(price) }, inStk, url, time, rating: Number(rating), ratingCnt: Number(ratingCnt)}, null]
       } catch (e) {
@@ -42,7 +43,10 @@ const getListing = {
          const html = await resp.text()
          const $ = cheerio.load(html)
          const script = $("script#jsonLD").text()
-         const json = JSON.parse(script)[0]
+         if (!script) throw new Error("Couldn't get product metadata.");
+         const parsedJson = JSON.parse(script)
+         const json = Array.isArray(parsedJson) ? parsedJson[0] : parsedJson
+         if (!json || typeof json !== "object") throw new Error("Couldn't parse product metadata.");
          const title = json.name
          if (!title) throw new Error("Couldn't get product name.");
          const image = json.image[0]
@@ -71,7 +75,8 @@ async function getTabInfo() {
    const flipkartKey    = (flipkartPid ?? flipkartItmNum)?.[1]
    if (flipkartKey) {
       const parsed = new URL(tab.url)
-      parsed.hostname = 'https://dl.flipkart.com'
+      parsed.protocol = 'https:'
+      parsed.hostname = 'dl.flipkart.com'
       parsed.searchParams.delete('affid')
       return { type: "flipkart", key: flipkartKey, url: parsed.toString() }
    }
@@ -215,6 +220,17 @@ function lineClamp(txt) {
    return words.join(" ") + "..."
 }
 
+function isListingDiscounted(listing) {
+   return listing?.inStk === true &&
+      Number.isFinite(Number(listing?.price?.curr)) &&
+      Number.isFinite(Number(listing?.price?.last)) &&
+      Number(listing.price.curr) < Number(listing.price.last)
+}
+
+function countDiscountedListings(listings) {
+   return Object.values(listings).filter(isListingDiscounted).length
+}
+
 async function showNotification(msg, key, image, title) {
    await chrome.notifications.create(key, {
       type: 'basic',
@@ -234,11 +250,7 @@ async function handleNotification(key) {
 }
 
 async function setBadge(listings) {
-   const num = 
-      Object.values(listings)
-      .filter((l) => (l.price.curr < l.price.last) &&
-                     (l.inStk == true))
-      .length
+   const num = countDiscountedListings(listings)
    num == 0 && await chrome.action.setBadgeText({ text: "" });
    num >  0 && await chrome.action.setBadgeText({ text: String(num) });
 }
@@ -271,7 +283,9 @@ async function handleAlarm() {
 
 async function setInitialState() {
    await dbReadyPromise
+   const Listings = await getAllListings()
    await chrome.storage.sync.set({ IsRefreshing: false })
+   await setBadge(Listings)
 }
 
 async function handleInstall() {
